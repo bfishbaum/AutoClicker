@@ -1,20 +1,23 @@
 import java.io.*;
+import java.lang.Math;
 import java.awt.Robot.*;
-import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.InputEvent.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.*;
 import javax.swing.JPanel;
 
 public class AutoClicker extends JPanel implements KeyListener, Runnable {
 	Robot Clicker;
 	boolean stop;
 	int clicks = 0;
-	static final int maxClicks = 50000;
+	static final int startDelay = 1000;
 	static final int delay = 50;
-	static final int brake = 1000;
-	static final int perClick = 1000;
+
+	double x = 100;
+	double y = 300;
+	double eps = 5;
 	
 
 	public AutoClicker(){
@@ -34,17 +37,37 @@ public class AutoClicker extends JPanel implements KeyListener, Runnable {
 		this.addKeyListener(this);
         this.setFocusable(true);
         this.requestFocusInWindow();
-		Clicker.delay(delay);
-		Clicker.mouseMove(100,300);
-		while(!stop && clicks < maxClicks){
+		try{
+			Thread.sleep(startDelay);
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
+		PointerInfo mouseLoc = MouseInfo.getPointerInfo();
+		double x2,y2;
+		x2 = mouseLoc.getLocation().x;
+		y2 = mouseLoc.getLocation().y;
+
+		x = x2;
+		y = y2;
+
+		Clicker.mouseMove((int) x,(int) y);
+
+		// loop ends when user moves their mouse
+		while(!MovedAway(x2,y2)){
 			Clicker.mousePress(InputEvent.BUTTON1_MASK);
 			Clicker.mouseRelease(InputEvent.BUTTON1_MASK);
 			clicks += 1;
 			Clicker.delay(delay);
-			if(clicks % perClick == 0){
-				Clicker.delay(brake);
-			}
+
+			mouseLoc = MouseInfo.getPointerInfo();
+			x2 = mouseLoc.getLocation().x;
+			y2 = mouseLoc.getLocation().y;
 		}
+	}
+
+	public boolean MovedAway(double x2, double y2){
+		return (Math.abs(x2 - x) > eps || Math.abs(y2-y) > eps);
 	}
 
 	@Override
